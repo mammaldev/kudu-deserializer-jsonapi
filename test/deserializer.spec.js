@@ -25,6 +25,21 @@ describe('Deserializer', () => {
     expect(test).to.throw(Error, /Expected an object/);
   });
 
+  it('should throw an error if passed an errors member which is not an array', () => {
+    let test = () => deserialize(kudu, { errors: 1 });
+    expect(test).to.throw(Error, /array of error objects/);
+  });
+
+  it('should throw an error if passed an errors member alongside a data member', () => {
+    let test = () => deserialize(kudu, { errors: [ {} ], data: {} });
+    expect(test).to.throw(Error, /alongside the "data" member/);
+  });
+
+  it('should throw an error referring to valid given errors', () => {
+    let test = () => deserialize(kudu, { errors: [ {} ] });
+    expect(test).to.throw(Error, /Expected an instance/);
+  });
+
   it('should throw if passed an object without a "data" property', () => {
     let test = () => deserialize(kudu, {});
     expect(test).to.throw(Error, /data/);

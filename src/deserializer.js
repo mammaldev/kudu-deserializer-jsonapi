@@ -25,6 +25,37 @@ export default ( app = null, obj = null, type = null, requireId = true ) => {
     throw new Error('Expected an object.');
   }
 
+  // JSON API specifies that a document must have at least one of "data",
+  // "errors" or "meta" as a top-level member. We first check for errors. If no
+  // errors are present we move on to looking for actual data. At the moment
+  // the "meta" member is ignored.
+  if ( obj.hasOwnProperty('errors') ) {
+
+    // The "errors" member, if present, must be an array of error objects, and
+    // it may not coexist with the "data" member.
+    if ( !Array.isArray(obj.errors) || !obj.errors.length ) {
+      throw new Error(
+        'The "errors" member must be an array of error objects.'
+      );
+    }
+
+    if ( obj.hasOwnProperty('data') ) {
+      throw new Error(
+        'The "errors" member must be present alongside the "data" member.'
+      );
+    }
+
+    // If the document contains valid errors we format them appropriately and
+    // throw them back to the app to handle.
+    const error = new Error(
+      'Expected an instance to deserialize but got errors instead. ' +
+      'Inspect the "errors" property for details.'
+    );
+    error.errors = obj.errors;
+
+    throw error;
+  }
+
   // JSON API specifies that a request must have a "data" member at the top
   // level. See http://jsonapi.org/format/#document-structure for details.
   if ( !obj.hasOwnProperty('data') ) {
