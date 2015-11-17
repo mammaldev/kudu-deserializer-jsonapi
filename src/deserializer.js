@@ -63,45 +63,60 @@ export default ( app = null, obj = null, type = null, requireId = true ) => {
   }
 
   // The "data" property must either be a resource object, resource identifier
-  // object or null. It should never be null in this situation. A resource
-  // identifier object must have "type" and "id" properties, unless the
-  // represented resource has been created on the client and is awaiting a
-  // unique identifier assigned by the server, in which case the "id" property
-  // is optional.
+  // object, an array of either of those, or null. It should never be null in
+  // this situation. A resource identifier object must have "type" and "id"
+  // properties, unless the represented resource has been created on the client
+  // and is awaiting a unique identifier assigned by the server, in which case
+  // the "id" property is optional.
   let data = obj.data;
 
-  if ( typeof data.type !== 'string' ) {
-    throw new Error('Expected "type" property to be a string.');
+  if ( Array.isArray(data) ) {
+    return data.map(deserializeResourceObject);
   }
 
-  if ( requireId && typeof data.id !== 'string' ) {
-    throw new Error('Expected "id" property to be a string.');
+  return deserializeResourceObject(data);
+
+  //
+  // Utility functions.
+  //
+
+  function deserializeResourceObject( data ) {
+
+    if ( typeof data.type !== 'string' ) {
+      throw new Error('Expected "type" property to be a string.');
+    }
+
+    if ( requireId && typeof data.id !== 'string' ) {
+      throw new Error('Expected "id" property to be a string.');
+    }
+
+    // Get the model constructor associated with the resource type. If there is
+    // no constructor we can't go any further.
+    let Model = app.models.get(data.type);
+
+    if ( !Model ) {
+      let err = new Error(`No model for type "${ data.type }".`);
+      err.status = 409;
+      throw err;
+    }
+
+    // If the model constructor is not for the expected type we have a conflict.
+    if ( type !== Model.plural && type !== Model.singular ) {
+      let err = new Error(
+        `Expected ${ type } model but got ${ Model.singular }.`
+      );
+      err.status = 409;
+      throw err;
+    }
+
+    let instance = new Model(data.attributes);
+
+    // Add the type andi dentifier to the instance. The JSON API specification
+    // prohibits the use of "id" or "type" in attribute objects so this
+    // shouldn't cause any conflicts.
+    instance.type = data.type;
+    instance.id = data.id;
+
+    return instance;
   }
-
-  // Get the model constructor associated with the resource type. If there is
-  // no constructor we can't go any further.
-  let Model = app.models.get(data.type);
-
-  if ( !Model ) {
-    let err = new Error(`No model for type "${ data.type }".`);
-    err.status = 409;
-    throw err;
-  }
-
-  // If the model constructor is not for the expected type we have a conflict.
-  if ( type !== Model.plural && type !== Model.singular ) {
-    let err = new Error(`Expected ${ type } model but got ${ Model.singular }.`);
-    err.status = 409;
-    throw err;
-  }
-
-  let instance = new Model(data.attributes);
-
-  // Add the type andi dentifier to the instance. The JSON API specification
-  // prohibits the use of "id" or "type" in attribute objects so this shouldn't
-  // cause any conflicts.
-  instance.type = data.type;
-  instance.id = data.id;
-
-  return instance;
 };

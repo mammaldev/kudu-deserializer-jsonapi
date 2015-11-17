@@ -109,4 +109,14 @@ describe('Deserializer', () => {
     let deserialized = deserialize(kudu, obj, 'test');
     expect(deserialized).to.have.property('id', '1');
   });
+
+  it('should return an array of Kudu model instances if passed a JSON string', () => {
+    let obj = JSON.stringify({
+      data: [
+        { type: 'test', id: '1' },
+      ],
+    });
+    let deserialized = deserialize(kudu, obj, 'test');
+    expect(deserialized).to.be.an('array').of.length(1);
+  });
 });
