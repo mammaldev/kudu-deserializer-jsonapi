@@ -111,6 +111,47 @@ export default ( app = null, obj = null, type = null, requireId = true ) => {
 
     let instance = new Model(data.attributes);
 
+    // If the serialized data contains compound documents (in an "included" key)
+    // we need to map them on to the deserialized instance by their
+    // relationships.
+    if ( data.relationships && data.included && data.included.length ) {
+
+      Object.keys(data.relationships).forEach(( key ) => {
+
+        // If a relationship object contains any resource identifiers we can
+        // check to see if a matching compound document is present.
+        const identifier = data.relationships[ key ].data;
+        let compound;
+
+        // If a relationship is to-many the relationship object may contain an
+        // array of resource identifiers. Otherwise, it should be an object.
+        if ( Array.isArray(identifier) ) {
+
+          compound = data.included.filter(( item ) => {
+
+            const { type, id } = item;
+            return identifier.some(( identifier ) => {
+              return identifier.type === type && identifier.id === id;
+            });
+          });
+        } else if ( identifier ) {
+
+          const { type, id } = identifier;
+          compound = data.included.filter(( item ) =>
+            item.type === type && item.id === id
+          )[ 0 ];
+        }
+
+        // If a matching compound document is present we can attach it to the
+        // deserialized instance at the key specified by the relationship.
+        if ( Array.isArray(compound) ) {
+          instance[ key ] = compound.map(deserializeResourceObject);
+        } else if ( compound ) {
+          instance[ key ] = deserializeResourceObject(compound);
+        }
+      });
+    }
+
     // Add the type and identifier to the instance. The JSON API specification
     // prohibits the use of "id" or "type" in attribute objects so this
     // shouldn't cause any conflicts.

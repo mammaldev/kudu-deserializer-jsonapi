@@ -17,6 +17,10 @@ describe('Deserializer', () => {
           type: String,
         },
       },
+      relationships: {
+        child: { type: 'test' },
+        children: { type: 'test', hasMany: true },
+      },
     });
   });
 
@@ -118,5 +122,39 @@ describe('Deserializer', () => {
     });
     let deserialized = deserialize(kudu, obj, 'test');
     expect(deserialized).to.be.an('array').of.length(1);
+  });
+
+  it('should map a compound document onto the instance based on a relationship', () => {
+    let obj = JSON.stringify({
+      data: {
+        type: 'test',
+        id: '1',
+        attributes: { prop: 'test' },
+        relationships: { child: { data: { type: 'test', id: '2' } } },
+        included: [
+          { type: 'test', id: '2', attributes: { prop: 'test2' } },
+        ],
+      },
+    });
+    let deserialized = deserialize(kudu, obj, 'test');
+    expect(deserialized).to.have.property('child')
+      .that.is.an.instanceOf(Model).with.property('id', '2');
+  });
+
+  it('should map an array of compound documents onto the instance based on a relationship', () => {
+    let obj = JSON.stringify({
+      data: {
+        type: 'test',
+        id: '1',
+        attributes: { prop: 'test' },
+        relationships: { children: { data: [ { type: 'test', id: '2' } ] } },
+        included: [
+          { type: 'test', id: '2', attributes: { prop: 'test2' } },
+        ],
+      },
+    });
+    let deserialized = deserialize(kudu, obj, 'test');
+    expect(deserialized).to.have.property('children')
+      .that.is.an('array').with.length(1);
   });
 });
