@@ -71,16 +71,16 @@ export default ( app = null, obj = null, type = null, requireId = true ) => {
   let data = obj.data;
 
   if ( Array.isArray(data) ) {
-    return data.map(deserializeResourceObject);
+    return data.map(( item ) => deserializeResourceObject(item, type));
   }
 
-  return deserializeResourceObject(data);
+  return deserializeResourceObject(data, type);
 
   //
   // Utility functions.
   //
 
-  function deserializeResourceObject( data ) {
+  function deserializeResourceObject( data, expectedType ) {
 
     if ( typeof data.type !== 'string' ) {
       throw new Error('Expected "type" property to be a string.');
@@ -101,9 +101,9 @@ export default ( app = null, obj = null, type = null, requireId = true ) => {
     }
 
     // If the model constructor is not for the expected type we have a conflict.
-    if ( type !== Model.plural && type !== Model.singular ) {
+    if ( expectedType !== Model.plural && expectedType !== Model.singular ) {
       let err = new Error(
-        `Expected ${ type } model but got ${ Model.singular }.`
+        `Expected ${ expectedType } model but got ${ Model.singular }.`
       );
       err.status = 409;
       throw err;
@@ -145,9 +145,11 @@ export default ( app = null, obj = null, type = null, requireId = true ) => {
         // If a matching compound document is present we can attach it to the
         // deserialized instance at the key specified by the relationship.
         if ( Array.isArray(compound) ) {
-          instance[ key ] = compound.map(deserializeResourceObject);
+          instance[ key ] = compound.map(( item ) =>
+            deserializeResourceObject(item, item.type)
+          );
         } else if ( compound ) {
-          instance[ key ] = deserializeResourceObject(compound);
+          instance[ key ] = deserializeResourceObject(compound, compound.type);
         }
       });
     }

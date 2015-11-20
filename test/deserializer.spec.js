@@ -8,6 +8,7 @@ describe('Deserializer', () => {
 
   let kudu;
   let Model;
+  let Child;
 
   beforeEach(() => {
     kudu = new Kudu();
@@ -18,8 +19,13 @@ describe('Deserializer', () => {
         },
       },
       relationships: {
-        child: { type: 'test' },
-        children: { type: 'test', hasMany: true },
+        child: { type: 'child' },
+        children: { type: 'child', hasMany: true },
+      },
+    });
+    Child = kudu.createModel('child', {
+      properties: {
+        name: { type: String },
       },
     });
   });
@@ -130,15 +136,15 @@ describe('Deserializer', () => {
         type: 'test',
         id: '1',
         attributes: { prop: 'test' },
-        relationships: { child: { data: { type: 'test', id: '2' } } },
+        relationships: { child: { data: { type: 'child', id: '2' } } },
         included: [
-          { type: 'test', id: '2', attributes: { prop: 'test2' } },
+          { type: 'child', id: '2', attributes: { prop: 'test2' } },
         ],
       },
     });
     let deserialized = deserialize(kudu, obj, 'test');
     expect(deserialized).to.have.property('child')
-      .that.is.an.instanceOf(Model).with.property('id', '2');
+      .that.is.an.instanceOf(Child).with.property('id', '2');
   });
 
   it('should map an array of compound documents onto the instance based on a relationship', () => {
@@ -147,9 +153,9 @@ describe('Deserializer', () => {
         type: 'test',
         id: '1',
         attributes: { prop: 'test' },
-        relationships: { children: { data: [ { type: 'test', id: '2' } ] } },
+        relationships: { children: { data: [ { type: 'child', id: '2' } ] } },
         included: [
-          { type: 'test', id: '2', attributes: { prop: 'test2' } },
+          { type: 'child', id: '2', attributes: { prop: 'test2' } },
         ],
       },
     });
