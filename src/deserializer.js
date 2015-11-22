@@ -69,6 +69,7 @@ export default ( app = null, obj = null, type = null, requireId = true ) => {
   // and is awaiting a unique identifier assigned by the server, in which case
   // the "id" property is optional.
   let data = obj.data;
+  let included = obj.included;
 
   if ( Array.isArray(data) ) {
     return data.map(( item ) => deserializeResourceObject(item, type));
@@ -111,10 +112,13 @@ export default ( app = null, obj = null, type = null, requireId = true ) => {
 
     let instance = new Model(data.attributes);
 
+    // TODO: Fix this following change to serializer that puts includes at top
+    // level.
+    //
     // If the serialized data contains compound documents (in an "included" key)
     // we need to map them on to the deserialized instance by their
     // relationships.
-    if ( data.relationships && data.included && data.included.length ) {
+    if ( data.relationships && included ) {
 
       Object.keys(data.relationships).forEach(( key ) => {
 
@@ -127,7 +131,7 @@ export default ( app = null, obj = null, type = null, requireId = true ) => {
         // array of resource identifiers. Otherwise, it should be an object.
         if ( Array.isArray(identifier) ) {
 
-          compound = data.included.filter(( item ) => {
+          compound = included.filter(( item ) => {
 
             const { type, id } = item;
             return identifier.some(( identifier ) => {
@@ -137,7 +141,7 @@ export default ( app = null, obj = null, type = null, requireId = true ) => {
         } else if ( identifier ) {
 
           const { type, id } = identifier;
-          compound = data.included.filter(( item ) =>
+          compound = included.filter(( item ) =>
             item.type === type && item.id === id
           )[ 0 ];
         }

@@ -137,10 +137,10 @@ describe('Deserializer', () => {
         id: '1',
         attributes: { prop: 'test' },
         relationships: { child: { data: { type: 'child', id: '2' } } },
-        included: [
-          { type: 'child', id: '2', attributes: { prop: 'test2' } },
-        ],
       },
+      included: [
+        { type: 'child', id: '2', attributes: { prop: 'test2' } },
+      ],
     });
     let deserialized = deserialize(kudu, obj, 'test');
     expect(deserialized).to.have.property('child')
@@ -154,10 +154,10 @@ describe('Deserializer', () => {
         id: '1',
         attributes: { prop: 'test' },
         relationships: { children: { data: [ { type: 'child', id: '2' } ] } },
-        included: [
-          { type: 'child', id: '2', attributes: { prop: 'test2' } },
-        ],
       },
+      included: [
+        { type: 'child', id: '2', attributes: { prop: 'test2' } },
+      ],
     });
     let deserialized = deserialize(kudu, obj, 'test');
     expect(deserialized).to.have.property('children')
