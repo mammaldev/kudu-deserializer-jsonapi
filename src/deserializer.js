@@ -112,9 +112,6 @@ export default ( app = null, obj = null, type = null, requireId = true ) => {
 
     let instance = new Model(data.attributes);
 
-    // TODO: Fix this following change to serializer that puts includes at top
-    // level.
-    //
     // If the serialized data contains compound documents (in an "included" key)
     // we need to map them on to the deserialized instance by their
     // relationships.
