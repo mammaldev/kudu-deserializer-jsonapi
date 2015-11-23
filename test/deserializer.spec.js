@@ -163,4 +163,31 @@ describe('Deserializer', () => {
     expect(deserialized).to.have.property('children')
       .that.is.an('array').with.length(1);
   });
+
+  it('should map an identifier onto an instance when a compound document is not present', () => {
+    let obj = JSON.stringify({
+      data: {
+        type: 'test',
+        id: '1',
+        attributes: { prop: 'test' },
+        relationships: { child: { data: { type: 'child', id: '2' } } },
+      },
+    });
+    let deserialized = deserialize(kudu, obj, 'test');
+    expect(deserialized).to.have.property('child', '2');
+  });
+
+  it('should map an array of identifiers onto the instance based on a relationship', () => {
+    let obj = JSON.stringify({
+      data: {
+        type: 'test',
+        id: '1',
+        attributes: { prop: 'test' },
+        relationships: { children: { data: [ { type: 'child', id: '2' } ] } },
+      },
+    });
+    let deserialized = deserialize(kudu, obj, 'test');
+    expect(deserialized).to.have.property('children')
+      .that.is.an('array').with.length(1);
+  });
 });

@@ -69,7 +69,7 @@ export default ( app = null, obj = null, type = null, requireId = true ) => {
   // and is awaiting a unique identifier assigned by the server, in which case
   // the "id" property is optional.
   let data = obj.data;
-  let included = obj.included;
+  let included = obj.included || [];
 
   if ( Array.isArray(data) ) {
     return data.map(( item ) => deserializeResourceObject(item, type));
@@ -112,10 +112,10 @@ export default ( app = null, obj = null, type = null, requireId = true ) => {
 
     let instance = new Model(data.attributes);
 
-    // If the serialized data contains compound documents (in an "included" key)
-    // we need to map them on to the deserialized instance by their
-    // relationships.
-    if ( data.relationships && included ) {
+    // If the serialized data contains relationships we need to map them onto
+    // the deserialized relationship. The relationship will usually be to a
+    // compound document or just the unique identifier of another document.
+    if ( data.relationships ) {
 
       Object.keys(data.relationships).forEach(( key ) => {
 
@@ -143,14 +143,25 @@ export default ( app = null, obj = null, type = null, requireId = true ) => {
           )[ 0 ];
         }
 
-        // If a matching compound document is present we can attach it to the
-        // deserialized instance at the key specified by the relationship.
-        if ( Array.isArray(compound) ) {
+        if ( Array.isArray(compound) && compound.length ) {
+
+          // If a matching compound document is present we can attach it to the
+          // deserialized instance at the key specified by the relationship.
           instance[ key ] = compound.map(( item ) =>
             deserializeResourceObject(item, item.type)
           );
-        } else if ( compound ) {
+        } else if ( compound && !Array.isArray(compound) ) {
+
           instance[ key ] = deserializeResourceObject(compound, compound.type);
+        } else if ( Array.isArray(identifier) ) {
+
+          // If a compound document wasn't present but a resource identifier
+          // was we use the unique identifier from that as the value of the
+          // relationship key.
+          instance[ key ] = identifier.map(( item ) => item.id);
+        } else if ( identifier ) {
+
+          instance[ key ] = identifier.id;
         }
       });
     }
