@@ -9,6 +9,7 @@ describe('Deserializer', () => {
   let kudu;
   let Model;
   let Child;
+  let Child2;
 
   beforeEach(() => {
     kudu = new Kudu();
@@ -27,7 +28,15 @@ describe('Deserializer', () => {
       properties: {
         name: { type: String },
       },
+      relationships: {
+        deep: { type: 'child2' },
+      },
     });
+    Child2 = kudu.createModel('child2', {
+      properties: {
+        name: { type: String },
+      },
+    })
   });
 
   it('should throw if not passed anything to deserialize', () => {
@@ -189,5 +198,31 @@ describe('Deserializer', () => {
     let deserialized = deserialize(kudu, obj, 'test');
     expect(deserialized).to.have.property('children')
       .that.is.an('array').with.length(1);
+  });
+
+  it('should map a compound document onto a deeply nested instance', () => {
+    let obj = JSON.stringify({
+      data: {
+        type: 'test',
+        id: '1',
+        attributes: { name: 'test' },
+        relationships: { children: { data: [ { type: 'child', id: '2' } ] } },
+      },
+      included: [
+        {
+          type: 'child',
+          id: '2',
+          attributes: { name: 'test2' },
+          relationships: { deep: { data: { type: 'child2', id: '3' } } },
+        },
+        {
+          type: 'child2',
+          id: '3',
+          attributes: { name: 'nested' },
+        }
+      ],
+    });
+    let deserialized = deserialize(kudu, obj, 'test');
+    expect(deserialized.children[ 0 ]).to.have.property('deep');
   });
 });
