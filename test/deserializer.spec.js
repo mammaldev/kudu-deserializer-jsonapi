@@ -36,7 +36,7 @@ describe('Deserializer', () => {
       properties: {
         name: { type: String },
       },
-    })
+    });
   });
 
   it('should throw if not passed anything to deserialize', () => {
@@ -219,7 +219,7 @@ describe('Deserializer', () => {
           type: 'child2',
           id: '3',
           attributes: { name: 'nested' },
-        }
+        },
       ],
     });
     let deserialized = deserialize(kudu, obj, 'test');
