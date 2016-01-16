@@ -4,18 +4,27 @@
 //
 // Arguments:
 //
-//   app          {Kudu}       A Kudu app instance.
+//   app     {Kudu}       A Kudu app instance.
 //
-//   obj          {Object}     A JSON API compliant request object in the form
-//                             of a JSON string or an object.
+//   obj     {Object}     A JSON API compliant request object in the form of a
+//                        JSON string or an object.
+//
+//   opts    {Object}    An options object as detailed below.
+//
+// Options:
 //
 //   type         {String}     The Kudu model "type" of which "obj" represents
-//                             an instance.
+//                             an instance. If not provided any type or
+//                             combination of types will be deserialized.
 //
 //   requireId    {Boolean}    Flag to indicate whether or not the "id"
 //                             property is required on the deserialized object.
 //
-export default ( app = null, obj = null, type = null, requireId = true ) => {
+export default (
+  app = null,
+  obj = null,
+  { type = null, requireId = true } = {}
+) => {
 
   if ( typeof obj === 'string' ) {
     obj = JSON.parse(obj);
@@ -102,7 +111,11 @@ export default ( app = null, obj = null, type = null, requireId = true ) => {
     }
 
     // If the model constructor is not for the expected type we have a conflict.
-    if ( expectedType !== Model.plural && expectedType !== Model.singular ) {
+    if (
+      expectedType &&
+      expectedType !== Model.plural &&
+      expectedType !== Model.singular
+    ) {
       let err = new Error(
         `Expected ${ expectedType } model but got ${ Model.singular }.`
       );

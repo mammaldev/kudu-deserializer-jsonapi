@@ -75,7 +75,10 @@ describe('Deserializer', () => {
   });
 
   it('should not throw if passed an object without an id property when an id is not required', () => {
-    let test = () => deserialize(kudu, { data: { type: 'test' } }, 'test', false);
+    let test = () => deserialize(kudu, { data: { type: 'test' } }, {
+      type: 'test',
+      requireId: false,
+    });
     expect(test).not.to.throw(Error);
   });
 
@@ -85,7 +88,9 @@ describe('Deserializer', () => {
   });
 
   it('should throw if the expected type does not match the provided type', () => {
-    let test = () => deserialize(kudu, { data: { type: 'test', id: '1' } }, 'fail');
+    let test = () => deserialize(kudu, { data: { type: 'test', id: '1' } }, {
+      type: 'fail',
+    });
     expect(test).to.throw(Error, /model/);
   });
 
