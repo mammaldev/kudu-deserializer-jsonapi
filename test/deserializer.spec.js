@@ -98,7 +98,7 @@ describe('Deserializer', () => {
     let obj = JSON.stringify({
       data: { type: 'test', id: '1' },
     });
-    let deserialized = deserialize(kudu, obj, 'test');
+    let deserialized = deserialize(kudu, obj, { type: 'test' });
     expect(deserialized).to.be.an.instanceOf(Model);
   });
 
@@ -106,7 +106,7 @@ describe('Deserializer', () => {
     let obj = {
       data: { type: 'test', id: '1' },
     };
-    let deserialized = deserialize(kudu, obj, 'test');
+    let deserialized = deserialize(kudu, obj, { type: 'test' });
     expect(deserialized).to.be.an.instanceOf(Model);
   });
 
@@ -114,7 +114,7 @@ describe('Deserializer', () => {
     let obj = {
       data: { type: 'test', id: '1', attributes: { prop: 'test' } },
     };
-    let deserialized = deserialize(kudu, obj, 'test');
+    let deserialized = deserialize(kudu, obj, { type: 'test' });
     expect(deserialized).to.have.property('prop', 'test');
   });
 
@@ -122,7 +122,7 @@ describe('Deserializer', () => {
     let obj = {
       data: { type: 'test', id: '1', attributes: { prop: 'test' } },
     };
-    let deserialized = deserialize(kudu, obj, 'test');
+    let deserialized = deserialize(kudu, obj, { type: 'test' });
     expect(deserialized).to.have.property('type', 'test');
   });
 
@@ -130,7 +130,7 @@ describe('Deserializer', () => {
     let obj = {
       data: { type: 'test', id: '1', attributes: { prop: 'test' } },
     };
-    let deserialized = deserialize(kudu, obj, 'test');
+    let deserialized = deserialize(kudu, obj, { type: 'test' });
     expect(deserialized).to.have.property('id', '1');
   });
 
@@ -140,8 +140,19 @@ describe('Deserializer', () => {
         { type: 'test', id: '1' },
       ],
     });
-    let deserialized = deserialize(kudu, obj, 'test');
+    let deserialized = deserialize(kudu, obj, { type: 'test' });
     expect(deserialized).to.be.an('array').of.length(1);
+  });
+
+  it('should return an array of mixed Kudu model instances if passed a JSON string', () => {
+    let obj = JSON.stringify({
+      data: [
+        { type: 'test', id: '1' },
+        { type: 'child', id: '2' },
+      ],
+    });
+    let deserialized = deserialize(kudu, obj);
+    expect(deserialized).to.be.an('array').of.length(2);
   });
 
   it('should map a compound document onto the instance based on a relationship', () => {
@@ -156,7 +167,7 @@ describe('Deserializer', () => {
         { type: 'child', id: '2', attributes: { prop: 'test2' } },
       ],
     });
-    let deserialized = deserialize(kudu, obj, 'test');
+    let deserialized = deserialize(kudu, obj, { type: 'test' });
     expect(deserialized).to.have.property('child')
       .that.is.an.instanceOf(Child).with.property('id', '2');
   });
@@ -173,7 +184,7 @@ describe('Deserializer', () => {
         { type: 'child', id: '2', attributes: { prop: 'test2' } },
       ],
     });
-    let deserialized = deserialize(kudu, obj, 'test');
+    let deserialized = deserialize(kudu, obj, { type: 'test' });
     expect(deserialized).to.have.property('children')
       .that.is.an('array').with.length(1);
   });
@@ -187,7 +198,7 @@ describe('Deserializer', () => {
         relationships: { child: { data: { type: 'child', id: '2' } } },
       },
     });
-    let deserialized = deserialize(kudu, obj, 'test');
+    let deserialized = deserialize(kudu, obj, { type: 'test' });
     expect(deserialized).to.have.property('child', '2');
   });
 
@@ -200,7 +211,7 @@ describe('Deserializer', () => {
         relationships: { children: { data: [ { type: 'child', id: '2' } ] } },
       },
     });
-    let deserialized = deserialize(kudu, obj, 'test');
+    let deserialized = deserialize(kudu, obj, { type: 'test' });
     expect(deserialized).to.have.property('children')
       .that.is.an('array').with.length(1);
   });
@@ -227,7 +238,7 @@ describe('Deserializer', () => {
         },
       ],
     });
-    let deserialized = deserialize(kudu, obj, 'test');
+    let deserialized = deserialize(kudu, obj, { type: 'test' });
     expect(deserialized.children[ 0 ]).to.have.property('deep');
   });
 });
